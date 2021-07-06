@@ -22,6 +22,7 @@ def init_app():
         # Importing Routes:
         from .core import routes as core_routes
         from .microservice_logger import routes as microservice_routes
+        from . velkozz_rest_api_logger import routes as velkozz_rest_api_routes
 
         # Creating database schema:
         db.create_all()
@@ -29,5 +30,6 @@ def init_app():
         #  Registering Blueprints:
         app.register_blueprint(core_routes.core_bp)
         app.register_blueprint(microservice_routes.microservice_bp)
+        app.register_blueprint(velkozz_rest_api_routes.velkozz_REST_API_bp)
 
         return app

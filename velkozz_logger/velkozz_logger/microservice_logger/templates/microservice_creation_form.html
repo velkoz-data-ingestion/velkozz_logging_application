@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block body %}
+    <h1>Add Microservice</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.microservice_name.label }}<br>
+            {{ form.microservice_name(size=100) }}
+        </p>
+        <p>
+            {{ form.microservice_description.label }}<br>
+            {{ form.microservice_description(size=200) }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+{% endblock body %}

@@ -12,7 +12,4 @@ core_bp = Blueprint(
 # Test Initial Route:
 @core_bp.route("/", methods=["GET"])
 def home():
-    return render_template(
-        "home.html",
-        title="Home Template"
-    )
+    return render_template("home.html")

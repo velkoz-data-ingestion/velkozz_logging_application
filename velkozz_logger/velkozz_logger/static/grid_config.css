@@ -1,0 +1,41 @@
+/* Header Card Custom Config */
+.header-card {
+    background: var(--light-grey);
+    font-size: 3rem;
+    box-shadow: rgba(3, 8, 20, 0.1) 0px 0.15rem 0.5rem, rgba(2, 8, 20, 0.1) 0px 0.075rem 0.175rem;
+    height: 5rem;
+    width: 100%;
+    transition: all 500ms;
+    overflow: hidden;
+    margin-bottom: 5rem;
+    position: fixed;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: var(--color-header-logo);
+
+}
+.header-card a {
+    text-decoration: none;
+    float: left;
+    color: #ffffff;
+    text-align: center;
+    font-size: 17px;
+    padding-left: 0.5em;
+    padding-right: 1em;
+    padding-top: 1.5em;
+    padding-bottom: 1.0em;
+}
+
+#icon-format {
+    padding-top: 1.0em; 
+}
+
+#header-login {
+    float: right;
+}
+
+.main-body-content {
+    margin-top: 5rem;
+    padding: 0.5rem;
+}

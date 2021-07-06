@@ -121,3 +121,28 @@ class MicroServiceLog(db.Model):
 
     def __repr__(self): 
         return f"{self.app_name}{self.processName}{self.timestamp}"
+
+# Microservice Objects:
+class Microservice(db.Model):
+
+    __tablename__ = "microservices"
+
+    microservice_name = db.Column(
+        db.String(100),
+        primary_key=True,
+        unique=True
+    )
+
+    microservice_description = db.Column(
+        db.String(200),
+        nullable=True,
+        unique=False
+    )
+
+    date_added = db.Column(
+        db.TIMESTAMP,
+        nullable=True
+    )
+
+    def __repr__(self): 
+        return f"{self.microservice_name}"

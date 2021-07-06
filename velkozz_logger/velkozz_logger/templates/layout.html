@@ -2,16 +2,30 @@
 <html>
 
   <head>
-    <title>{{title}}</title>
+    {% block title %}<title></title>{% endblock title %}
     <meta charset="utf-8">
     <meta name="description" content={{description}}>
-    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="{{ url_for('static', filename='core_styling.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='grid_config.css') }}">
     {% block css %}{% endblock %}
   </head>
 
   <body>
-    <h1>TEST HELLO</h1>
-    {% block body %}{% endblock body %}
+    {% block navbar %}
+    <div class="header-card">
+            <a href="/">Logger</a>
+            <a href="{{ url_for('microservice_bp.microservice_log_home') }}">Microservices</a>
+            <a href="{{ url_for('velkozz_REST_API_bp.velkozz_REST_API_home') }}">Velkozz REST API</a>
+    </div> 
+    {% endblock navbar %}
+
+    <div class="main-body-content">
+      {% block body %}
+      {% endblock body %}
+    </div>
+  
+      {% block javascript %}
+      {% endblock javascript %}
   </body>
 
 </html>

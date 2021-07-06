@@ -1,5 +1,5 @@
 # Importing Flask modules: 
-from flask import Blueprint, make_response
+from flask import Blueprint, make_response, render_template, flash, redirect
 from flask import current_app as app
 
 # Importing Flask REST API modules:
@@ -9,9 +9,13 @@ from flask_restful import Resource, reqparse, Api
 import ast
 import json
 import datetime
+import networkx as nx
+import plotly
+import plotly.graph_objects as go
 
 # Importing internal packages: 
-from .models import MicroServiceLog, db
+from .models import MicroServiceLog, Microservice, db
+from .forms import MicroserviceCreationForm
 
 # Blueprint Configuration:
 microservice_bp = Blueprint(
@@ -147,4 +151,131 @@ api.add_resource(MicroServiceLogs, "/microservices/api/")
 # Non REST API Routes:
 @microservice_bp.route("/microservices/", methods=["GET"])
 def microservice_log_home():
-    return "Microservice Log Home Page"
+
+    # Querying the Microservice objects:
+    microservices = Microservice.query.all()
+
+    # Creating the graph plot from all the microservices:
+    microservice_G = nx.Graph()
+    microservice_G.add_node("Velkozz_REST_API") # Central node for the graph, the velkozz REST API.
+
+    # Adding Microservice objects as nodes to the graph:
+    microservice_G.add_nodes_from(microservices)
+
+    for microservice in microservices:
+        microservice_G.add_edge(microservice, "Velkozz_REST_API")
+
+    # Generating the positions for each node in the graph:
+    pos = nx.spring_layout(microservice_G)
+
+    # formatting the nodes and edges of the graph:
+    for n, p in pos.items():
+        microservice_G.nodes[n]["pos"] = p
+
+    # Creating the scatter plot for the edges:
+    edge_trace = go.Scatter(
+        x = [],
+        y = [],
+        line = dict(width=0.5, color="#888"),
+        hoverinfo="none",
+        mode="lines"
+    )
+
+    # Populating the edge trace with x and y values:
+    for edge in microservice_G.edges():
+        x0, y0 = microservice_G.nodes[edge[0]]['pos']
+        x1, y1 = microservice_G.nodes[edge[1]]['pos']
+        edge_trace["x"] += tuple([x0, x1, None]) 
+        edge_trace["y"] += tuple([y0, y1, None])
+    
+    # Creating the scatter plot for graph nodes:
+    node_trace = go.Scatter(
+        x=[],
+        y=[],
+        text=[],
+        mode="markers",
+        hoverinfo="text",
+        marker=dict(
+            showscale=True,
+            colorscale='RdBu',
+            reversescale=True,
+            color=[],
+            size=15,
+            colorbar=dict(
+                thickness=10,
+                title='Node Connections',
+                xanchor='left',
+                titleside='right'),
+        line=dict(width=0)))   
+    
+    # Populating the node scatter trace with x and y values:
+    for node in microservice_G.nodes():
+        x, y = microservice_G.nodes[node]['pos']
+        node_trace["x"] += tuple([x])
+        node_trace["y"] += tuple([y])
+    
+    # Labeling the nodes text and color:
+    for node in microservice_G.nodes():
+        # Determining if the node is a microservice or the REST API:
+        if type(node) == str:
+            # Labeling the node:
+            node_trace["text"] += tuple([node])
+            
+            # Setting REST API node color:
+            node_trace["marker"]["color"] += tuple(["#FF00FF"]) # This overwrites the scatterplot params w/ config values.
+
+        else:
+            # Labeling the node:
+            node_trace["text"] += tuple([f"{node.microservice_name} Microservice"])
+
+            # Setting the node color for Microservices:
+            node_trace["marker"]['color'] += tuple(["#0000FF"])
+
+    # Creating the total graph figure:
+    fig = go.Figure(
+        data=[edge_trace, node_trace],
+        layout = go.Layout(
+            title="Test Title",
+            titlefont=dict(size=16),
+            showlegend=False,
+            hovermode="closest",
+            margin=dict(b=20,l=5,r=5,t=40),
+            annotations=[dict(
+                    text="No. of connections",
+                    showarrow=False,
+                    xref="paper", yref="paper")],
+            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
+
+    # Converting the plotly graph to a JSON object to be passed to the frontend:
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    # TODO: Filter the logs sent by microservices.
+    # Create line graphs of all of the microservices sent per microservice.
+
+    return render_template("microservice_home.html", microservices=microservices, graphJSON=graphJSON)
+
+# Route for Microservice creation:
+@microservice_bp.route("/microservices/add/", methods=["GET", "POST"])
+def microservice_creation_form():
+
+    # Creating Microservice creation form:
+    form = MicroserviceCreationForm()
+    
+    # Processing Form info and adding microservice to database:
+    if form.validate_on_submit():
+
+        # Creating a Microservice Object:
+        new_microservice = Microservice(
+            microservice_name=form.microservice_name.data,
+            microservice_description=form.microservice_description.data,
+            date_added=datetime.datetime.now()
+        )
+
+        # Committing a Microservice object to the database:
+        db.session.add(new_microservice)
+        db.session.commit()
+
+        return redirect("/microservices/")
+
+    return render_template("microservice_creation_form.html", form=form)
