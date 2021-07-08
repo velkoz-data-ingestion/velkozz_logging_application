@@ -12,6 +12,7 @@ import datetime
 import networkx as nx
 import plotly
 import plotly.graph_objects as go
+import pandas as pd
 
 # Importing internal packages: 
 from .models import MicroServiceLog, Microservice, db
@@ -146,10 +147,10 @@ class MicroServiceLogs(Resource):
             pass
 
 # Registering Microservice Log Routes:
-api.add_resource(MicroServiceLogs, "/microservices/api/")
+api.add_resource(MicroServiceLogs, "/api/")
 
 # Non REST API Routes:
-@microservice_bp.route("/microservices/", methods=["GET"])
+@microservice_bp.route("/", methods=["GET"])
 def microservice_log_home():
 
     # Querying the Microservice objects:
@@ -237,6 +238,8 @@ def microservice_log_home():
         layout = go.Layout(
             title="Test Title",
             titlefont=dict(size=16),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
             showlegend=False,
             hovermode="closest",
             margin=dict(b=20,l=5,r=5,t=40),
@@ -252,11 +255,84 @@ def microservice_log_home():
 
     # TODO: Filter the logs sent by microservices.
     # Create line graphs of all of the microservices sent per microservice.
+    # Querying all microservice logs:
+    microservice_logs = MicroServiceLog.query.all() # TODO: Filter the query by the top week (or other cap).
+
+    # Converting the microservice query object to a list of dictionary:
+    microservice_log_dicts = [
+        {
+            "name":microservice_log.name,
+            "msg":microservice_log.msg, 
+            "app_name":microservice_log.app_name,
+            "process_type":microservice_log.process_type,
+            "timestamp":microservice_log.timestamp,
+            "status_code":microservice_log.status_code, 
+            "levelname":microservice_log.levelname,
+            "created":microservice_log.created,
+            "lineno":microservice_log,
+            "funcName":microservice_log, 
+            "msecs":microservice_log,
+            "relativeCreated":microservice_log,
+            "thread":microservice_log,
+            "threadName":microservice_log, 
+            "processName":microservice_log,
+            "process":microservice_log
+
+        } for microservice_log in microservice_logs
+    ]
+
+    microservice_df = pd.DataFrame.from_dict(microservice_log_dicts)
+    microservice_df["_counter"] = 1 
+
+    # Slicing dataframes based on specific microservices:
+    microservice_slices = {}
+    for microservice in microservices:
+        
+        # Slicing dataframe:
+        df_slice = microservice_df.loc[microservice_df["app_name"] == microservice.microservice_name]
+
+        # Transforming data to create daily frequency counts:
+        df_slice.set_index("timestamp" ,inplace=True)
+
+        def add_microservice_log_data(microservice_slice_dict, microservice_name, microservice_df):
+            """Method tries to extract the number of daily occurances of the specific 
+            log level from the dataframe.
+
+            It extracts this data, seralizes it and adds the seralized data to the main 
+            'microservice_slices' dict.
+            """
+            # List of log level to process:
+            levels = ["INFO", "WARNING", "ERROR", "CRITICAL"]
+
+            # Iterating through the dataframe slicing and resampling data to get counts of logs:
+            level_data_dict = {}
+            for level in levels:
+                try:
+                    level_slice = df_slice.loc[df_slice["levelname"] == level, "_counter"].squeeze().resample("D").sum()
+                except:
+                    level_slice = None
+
+                if level_slice is not None:
+                    
+                    # Building nested dict for the specfici log level data:
+                    level_data_dict[level] = {
+                        "Date_Index":level_slice.index,
+                        "Data": list(level_slice.values)
+                    }
+                else:
+                    pass
+            
+            # Add the level_data_dict onto the main microservice slice dict:
+            microservice_slice_dict[microservice_name] = level_data_dict
+
+        add_microservice_log_data(microservice_slices, microservice, df_slice)
+    
+    # TODO: use Microservice Slice Dict to create plotly timesereis and pass them to the front-end.
 
     return render_template("microservice_home.html", microservices=microservices, graphJSON=graphJSON)
 
 # Route for Microservice creation:
-@microservice_bp.route("/microservices/add/", methods=["GET", "POST"])
+@microservice_bp.route("/add/", methods=["GET", "POST"])
 def microservice_creation_form():
 
     # Creating Microservice creation form:

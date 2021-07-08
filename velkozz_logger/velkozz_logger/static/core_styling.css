@@ -67,19 +67,3 @@ body {
     min-height: 100vh;
     flex-direction: column;   
 }
-
-.card {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: var(--card-color);
-    box-shadow: rgba(20, 3, 19, 0.1) 0px 0.15rem 0.5rem, rgba(2, 8, 20, 0.1) 0px 0.075rem 0.175rem;
-    height: 100%;
-    width: 100%;
-    transition: all 500ms;
-    overflow: hidden;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
- }

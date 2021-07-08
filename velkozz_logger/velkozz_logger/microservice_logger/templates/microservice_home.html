@@ -1,20 +1,37 @@
 {% extends "layout.html" %}
 
+{% block css %}
+    <link rel="stylesheet" href="{{ url_for('microservice_bp.static', filename='microservice_grid_styling.css') }}">
+{% endblock css %}
+
 {% block body %}
-<h1>This is the Microservices Home Page Where all microservices should be displayed</h1>
-<a href="{{ url_for('microservice_bp.microservice_creation_form') }}">microservice creation form</a>
+    <div class="main_microservice_body">
 
-{% for microservice in microservices %}
-    <h1>{{microservice.microservice_name}}</h1>
-    <div id="chart" class="chart"></div>
-{% endfor %}
+        <div class="page-intro">
+            <h1>This is the Microservices Home Page Where all microservices should be displayed</h1>
+            <a href="{{ url_for('microservice_bp.microservice_creation_form') }}">microservice creation form</a>
+            <div id="chart" class="chart"></div>
+        </div>
 
-{% block javascript %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-<script>
-    var graphs= {{graphJSON | safe}};
-    Plotly.plot("chart", graphs, {})
-</script>
-{% endblock javascript %}
+        <div class="microservice_grid">
+
+            {% for microservice in microservices %}
+                <div class="microservice">
+                    <h1>{{microservice.microservice_name}}</h1>
+                    <p>{{microservice.microservice_description}}</p>
+                    <div>This is a placeholder for the timeseries</div>
+                </div>
+            {% endfor %}    
+        </div>
+
+    </div>
+
+    {% block javascript %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script>
+        var graphs= {{graphJSON | safe}};
+        Plotly.plot("chart", graphs, {})
+    </script>
+    {% endblock javascript %}
 
 {% endblock body %}

@@ -28,8 +28,8 @@ def init_app():
         db.create_all()
 
         #  Registering Blueprints:
-        app.register_blueprint(core_routes.core_bp)
-        app.register_blueprint(microservice_routes.microservice_bp)
-        app.register_blueprint(velkozz_rest_api_routes.velkozz_REST_API_bp)
+        app.register_blueprint(core_routes.core_bp, url_prefix="/")
+        app.register_blueprint(microservice_routes.microservice_bp, url_prefix="/microservices")
+        app.register_blueprint(velkozz_rest_api_routes.velkozz_REST_API_bp, url_prefix="/rest_api")
 
         return app

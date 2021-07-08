@@ -1,0 +1,28 @@
+.main_microservice_body{
+    padding: 10px;
+}
+
+.chart{
+    border-radius: 6px;
+    border: 1px solid;
+    border-color: var(--btn-grey-border);   
+}
+
+.page-intro{
+    margin-bottom: 0.5rem;
+}
+
+.microservice_grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(1, 1fr);
+    gap: 0.5rem;
+}
+
+.microservice{
+    border-radius: 6px;
+    border: 1px solid;
+    border-color: var(--btn-grey-border);
+    padding: 5px;
+
+}
