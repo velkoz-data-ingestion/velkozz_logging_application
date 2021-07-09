@@ -19,7 +19,7 @@
                 <div class="microservice">
                     <h1>{{microservice.microservice_name}}</h1>
                     <p>{{microservice.microservice_description}}</p>
-                    <div>This is a placeholder for the timeseries</div>
+                    <div class="{{microservice.microservice_name}}" id={{microservice.microservice_name}}></div>
                 </div>
             {% endfor %}    
         </div>
@@ -29,8 +29,15 @@
     {% block javascript %}
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
+        // Main Graph Plot:
         var graphs= {{graphJSON | safe}};
-        Plotly.plot("chart", graphs, {})
+        Plotly.plot("chart", graphs, {});
+
+        {% for microservice in microservices %}
+            // Individual Microservice TimeSeries:
+            var microservice_graph = {{microservice.timeseries | safe}};
+            Plotly.plot("{{microservice.microservice_name}}", microservice_graph, {});
+        {% endfor %}
     </script>
     {% endblock javascript %}
 

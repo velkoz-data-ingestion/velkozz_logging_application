@@ -135,7 +135,7 @@ class MicroServiceLogs(Resource):
                 processName = args["processName"],
                 process = args["process"]
             )
-
+                        
             # Commiting a Log Object to the database:
             db.session.add(new_log)
             db.session.commit() 
@@ -326,13 +326,37 @@ def microservice_log_home():
             microservice_slice_dict[microservice_name] = level_data_dict
 
         add_microservice_log_data(microservice_slices, microservice, df_slice)
-    
+
     # TODO: use Microservice Slice Dict to create plotly timesereis and pass them to the front-end.
+    # Iterating through the microservice dict to create a plotly timeseries for each microservice:
+    levels = ["INFO", "WARNING", "ERROR", "CRITICAL"]
+    log_scatterplots = {}
+    for microservice in microservice_slices:    
+        microservice_fig = go.Figure()
+        
+        # Iterating over the logging levels to add traces to the main figure:
+        for level in levels:
+            try:
+                microservice_fig.add_trace(go.Scatter(
+                    name=f"{level}",
+                    mode="markers+lines",
+                    x=microservice_slices[microservice][level]["Date_Index"],
+                    y=microservice_slices[microservice][level]["Data"]
+                ))
+            except:
+                pass
+        
+        # Adding the built figure to the scatterplot dict:
+        log_scatterplots[microservice] = json.dumps(microservice_fig, cls=plotly.utils.PlotlyJSONEncoder)
+    
+    # Now that all scatterplots have been built adding the searlized data to the microservice query objects:
+    for microservice in microservices:
+        microservice.timeseries = log_scatterplots[microservice]
 
     return render_template("microservice_home.html", microservices=microservices, graphJSON=graphJSON)
 
 # Route for Microservice creation:
-@microservice_bp.route("/add/", methods=["GET", "POST"])
+@microservice_bp.route("/add/", methods=["GET", "POST"])        
 def microservice_creation_form():
 
     # Creating Microservice creation form:
