@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block css %}
+    <link rel="stylesheet" href="{{url_for('microservice_bp.static', filename='/css/microservice_dashboard.css')}}">
+    <link rel="stylesheet" href="{{url_for('microservice_bp.static', filename='js/microservice_dashboard.js')}}">
+{% endblock css %}
+
+{% block body %}
+    <h1>{{microservice.microservice_name}}</h1>
+    <p>{{microservice.microservice_description}}</p>
+    <div class="log_freq_timeseries" id="log_freq_timeseries"></div>
+    <div class="log_count_timeseries" id="log_count_timeseries"></div>
+    <div class="specific_log_table">
+        {% for microservice_log in microservice_logs %}
+        <details class="log_dropdown">
+            <summary>
+                {{microservice_log.app_name}}
+            </summary>
+            {{microservice_log.msg}}
+        </details>
+        {% endfor %}
+    </div>
+
+{% endblock body %}
+
+{% block javascript %}
+    <script>
+        var log_freq_graph = {{microservice.log_freq_timeseries | safe}};
+        Plotly.plot("log_freq_timeseries", log_freq_graph, {});
+    </script>
+{% endblock javascript %}

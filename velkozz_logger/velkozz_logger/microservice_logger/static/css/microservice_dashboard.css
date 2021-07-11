@@ -1,0 +1,7 @@
+/* Log Dropdown Styling */ 
+.log_dropdown{
+  border-radius: 6px;
+  border: 1px solid;
+  border-color: var(--btn-grey-border);   
+  margin: 5px;
+}

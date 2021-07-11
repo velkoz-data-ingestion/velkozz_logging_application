@@ -238,8 +238,8 @@ def microservice_log_home():
         layout = go.Layout(
             title="Test Title",
             titlefont=dict(size=16),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
+            #paper_bgcolor="rgba(0,0,0,0)",
+            #plot_bgcolor="rgba(0,0,0,0)",
             showlegend=False,
             hovermode="closest",
             margin=dict(b=20,l=5,r=5,t=40),
@@ -379,3 +379,77 @@ def microservice_creation_form():
         return redirect("/microservices/")
 
     return render_template("microservice_creation_form.html", form=form)
+
+# Route for a specific Microservice:
+@microservice_bp.route("/dashboard/<microservice>/", methods=["GET"])
+def specific_microservice_dashboard(microservice):
+    """
+    Method extracts the data to construct a specific Microservice dashboard and
+    passes this data into the HTML template.
+    """
+
+    levels = ["INFO", "WARNING", "ERROR", "CRITICAL"]
+
+    # Querying the single microservice from the Database:
+    microservice = Microservice.query.filter_by(microservice_name=microservice).first()
+
+    # TODO: Add logic to redirect the route if the microservice does not exist.
+    if microservice is not None:
+        
+        # Querying the logs from a specific microservice: 
+        microservice_logs = MicroServiceLog.query.filter_by(app_name=microservice.microservice_name).all()
+
+        # Converting the Microservice Logs to a dataframe:
+        microservice_log_dicts = [
+            {
+                "name":microservice_log.name,
+                "msg":microservice_log.msg, 
+                "app_name":microservice_log.app_name,
+                "process_type":microservice_log.process_type,
+                "timestamp":microservice_log.timestamp,
+                "status_code":microservice_log.status_code, 
+                "levelname":microservice_log.levelname,
+                "created":microservice_log.created,
+                "lineno":microservice_log,
+                "funcName":microservice_log, 
+                "msecs":microservice_log,
+                "relativeCreated":microservice_log,
+                "thread":microservice_log,
+                "threadName":microservice_log, 
+                "processName":microservice_log,
+                "process":microservice_log
+
+            } for microservice_log in microservice_logs
+        ]
+
+        # Creating and refactoring the dataframe into a dialy count of log frequency:
+        microservice_df = pd.DataFrame.from_dict(microservice_log_dicts)
+        
+        microservice_df["_counter"] = 1
+        microservice_df.set_index("timestamp" ,inplace=True)
+
+        # Creating a figure for microservice log timeseries based on log severity level:
+        log_level_fig = go.Figure()
+
+        # Iterating through the logging levels and adding plots to the figure:
+        for level in levels:
+            level_frequency = microservice_df.loc[microservice_df["levelname"] == level, "_counter"].squeeze().resample("D").sum()
+            try:
+                log_level_fig.add_trace(go.Scatter(
+                    name=f"{level}",
+                    mode="markers+lines",
+                    x=level_frequency.index,
+                    y=list(level_frequency.values)
+                ))
+                pass
+            except:
+                pass
+        
+        # Converting the timeseries figure to json and attaching it to the main microservice object:
+        log_freq_timeseries = json.dumps(log_level_fig, cls=plotly.utils.PlotlyJSONEncoder)
+        microservice.log_freq_timeseries = log_freq_timeseries
+
+    else:
+        pass
+    
+    return render_template("microservice_dashboard.html",  microservice=microservice, microservice_logs=microservice_logs)

@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block css %}
-    <link rel="stylesheet" href="{{ url_for('microservice_bp.static', filename='microservice_grid_styling.css') }}">
+    <link rel="stylesheet" href="{{ url_for('microservice_bp.static', filename='css/microservice_grid_styling.css') }}">
 {% endblock css %}
 
 {% block body %}
@@ -27,7 +27,6 @@
     </div>
 
     {% block javascript %}
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script>
         // Main Graph Plot:
         var graphs= {{graphJSON | safe}};
