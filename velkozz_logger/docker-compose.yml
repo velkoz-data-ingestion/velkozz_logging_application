@@ -6,7 +6,7 @@ services:
       - velkozz_logger_psql
     container_name: velkozz_logger
     networks:
-      - velkozz-api-network
+      - velkozz_web_api_velkozz-api-network
     env_file: 
       - .logger.env
     ports: 
@@ -17,7 +17,7 @@ services:
     container_name: velkozz_logger_psql
     restart: always
     networks:
-      - velkozz-api-network
+      - velkozz_web_api_velkozz-api-network
     env_file: 
       - .logger.env
     ports: 
