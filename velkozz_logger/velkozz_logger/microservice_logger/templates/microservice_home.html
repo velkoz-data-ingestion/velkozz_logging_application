@@ -8,8 +8,8 @@
     <div class="main_microservice_body">
 
         <div class="page-intro">
-            <h1>This is the Microservices Home Page Where all microservices should be displayed</h1>
-            <a href="{{ url_for('microservice_bp.microservice_creation_form') }}">microservice creation form</a>
+            <div class="add_button"><a href="{{ url_for('microservice_bp.microservice_creation_form') }}">+</a></div>
+            <h1 style="text-align:center;">Microservices</h1>
             <div id="chart" class="chart"></div>
         </div>
 
@@ -17,8 +17,10 @@
 
             {% for microservice in microservices %}
                 <div class="microservice">
-                    <h1>{{microservice.microservice_name}}</h1>
-                    <p>{{microservice.microservice_description}}</p>
+                    <div class="delete_link"><a href="{{ url_for('microservice_bp.remove_microservice', microservice=microservice.microservice_name) }}">Delete</a></div>
+                    <a class="invisible_link" href="{{ url_for('microservice_bp.specific_microservice_dashboard', microservice=microservice.microservice_name) }}">
+                        <h1>{{microservice.microservice_name}}</h1>
+                    </a>
                     <div class="{{microservice.microservice_name}}" id={{microservice.microservice_name}}></div>
                 </div>
             {% endfor %}    

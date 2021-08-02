@@ -11,7 +11,8 @@ db = SQLAlchemy()
 def init_app():
     "Method that creates and initalizes the core flask application"
     app = Flask(__name__, instance_relative_config=False)
-    app.config.from_object("config.DevConfig")
+    #app.config.from_object("config.DevConfig")
+    app.config.from_object("config.ProdConfig")
 
     # Initialize Plugins:
     db.init_app(app) # Database Connection

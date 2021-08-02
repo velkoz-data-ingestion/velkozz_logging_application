@@ -6,19 +6,47 @@
 {% endblock css %}
 
 {% block body %}
-    <h1>{{microservice.microservice_name}}</h1>
-    <p>{{microservice.microservice_description}}</p>
+    <h1 class="title-center">{{microservice.microservice_name}} Microservice</h1>
     <div class="log_freq_timeseries" id="log_freq_timeseries"></div>
     <div class="log_count_timeseries" id="log_count_timeseries"></div>
     <div class="specific_log_table">
-        {% for microservice_log in microservice_logs %}
-        <details class="log_dropdown">
-            <summary>
-                {{microservice_log.app_name}}
-            </summary>
-            {{microservice_log.msg}}
-        </details>
-        {% endfor %}
+        
+        <table class="log-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Level</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            
+            <tbody>
+            {% for microservice_log in microservice_logs %}
+                {% if microservice_log.levelname == "ERR." %}
+                    <tr>
+                        <td style="color: red;">{{microservice_log.timestamp}}</td>
+                        <td style="color: red;">{{microservice_log.levelname}}</td>
+                        <td style="color: red;">{{microservice_log.msg}}</td>
+                    </tr>
+                
+                {% elif microservice_log.levelname == "WARN" %}
+                    <tr>
+                        <td style="color: orange;">{{microservice_log.timestamp}}</td>
+                        <td style="color: orange;">{{microservice_log.levelname}}</td>
+                        <td style="color: orange;">{{microservice_log.msg}}</td>
+                    </tr>
+
+                {% else %}
+                    <tr>
+                        <td>{{microservice_log.timestamp}}</td>
+                        <td>{{microservice_log.levelname}}</td>
+                        <td>{{microservice_log.msg}}</td>
+                    </tr>
+                {% endif %}
+
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
 
 {% endblock body %}
@@ -28,4 +56,4 @@
         var log_freq_graph = {{microservice.log_freq_timeseries | safe}};
         Plotly.plot("log_freq_timeseries", log_freq_graph, {});
     </script>
-{% endblock javascript %}
+{% endblock javascript %} 

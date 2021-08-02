@@ -236,10 +236,10 @@ def microservice_log_home():
     fig = go.Figure(
         data=[edge_trace, node_trace],
         layout = go.Layout(
-            title="Test Title",
             titlefont=dict(size=16),
-            #paper_bgcolor="rgba(0,0,0,0)",
-            #plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#b2becd"),
             showlegend=False,
             hovermode="closest",
             margin=dict(b=20,l=5,r=5,t=40),
@@ -256,7 +256,10 @@ def microservice_log_home():
     # TODO: Filter the logs sent by microservices.
     # Create line graphs of all of the microservices sent per microservice.
     # Querying all microservice logs:
-    microservice_logs = MicroServiceLog.query.all() # TODO: Filter the query by the top week (or other cap).
+
+    # Creating the previous week timeframe that is used to filter the microservice logs:
+    prev_week = datetime.datetime.today() - datetime.timedelta(days=7)
+    microservice_logs = MicroServiceLog.query.filter(MicroServiceLog.timestamp >= prev_week).all()
 
     # Converting the microservice query object to a list of dictionary:
     microservice_log_dicts = [
@@ -293,7 +296,7 @@ def microservice_log_home():
 
         # Transforming data to create daily frequency counts:
         df_slice.set_index("timestamp" ,inplace=True)
-
+        
         def add_microservice_log_data(microservice_slice_dict, microservice_name, microservice_df):
             """Method tries to extract the number of daily occurances of the specific 
             log level from the dataframe.
@@ -302,7 +305,7 @@ def microservice_log_home():
             'microservice_slices' dict.
             """
             # List of log level to process:
-            levels = ["INFO", "WARNING", "ERROR", "CRITICAL"]
+            levels = ["INFO", "WARN", "ERR.", "CRITICAL"]
 
             # Iterating through the dataframe slicing and resampling data to get counts of logs:
             level_data_dict = {}
@@ -329,10 +332,48 @@ def microservice_log_home():
 
     # TODO: use Microservice Slice Dict to create plotly timesereis and pass them to the front-end.
     # Iterating through the microservice dict to create a plotly timeseries for each microservice:
-    levels = ["INFO", "WARNING", "ERROR", "CRITICAL"]
+    levels = ["INFO", "WARN", "ERR.", "CRITICAL"]
     log_scatterplots = {}
-    for microservice in microservice_slices:    
-        microservice_fig = go.Figure()
+    for microservice in microservice_slices:   
+
+        microservice_desc_lst = microservice.microservice_description.split(" ")
+        # Splitting microservice description to make it formattable:
+        if len(microservice_desc_lst) > 9:
+
+            # Inserting line breaks:
+            microservice_desc_lst.insert(10, "<br>")
+
+            # Re-converting the list of strigs to a single string and adding it back to the microservice objects:
+            microservice.microservice_description = " ".join(microservice_desc_lst)
+
+        microservice_fig = go.Figure(
+            layout=go.Layout(
+                title=dict(
+                    text=microservice.microservice_description,
+                    y=0.9,
+                    x=0.5,
+                    xanchor="center",
+                    yanchor="top"
+                ),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#b2becd"),
+                xaxis=dict(
+                    title="Local Time",
+                    gridcolor="#b2becd",
+                    linecolor="#b2becd",
+                    linewidth= 1,
+                    mirror= True, 
+                    showgrid=False),
+                yaxis=dict(
+                    title="Log Frequency",
+                    gridcolor= "#b2becd",
+                    linecolor= "#b2becd",
+                    linewidth= 2,
+                    mirror= True,
+                    showgrid= False)
+            )
+        )
         
         # Iterating over the logging levels to add traces to the main figure:
         for level in levels:
@@ -342,18 +383,43 @@ def microservice_log_home():
                     mode="markers+lines",
                     x=microservice_slices[microservice][level]["Date_Index"],
                     y=microservice_slices[microservice][level]["Data"]
+                    
                 ))
+                
             except:
                 pass
         
         # Adding the built figure to the scatterplot dict:
+        
         log_scatterplots[microservice] = json.dumps(microservice_fig, cls=plotly.utils.PlotlyJSONEncoder)
     
     # Now that all scatterplots have been built adding the searlized data to the microservice query objects:
     for microservice in microservices:
         microservice.timeseries = log_scatterplots[microservice]
-
+    
     return render_template("microservice_home.html", microservices=microservices, graphJSON=graphJSON)
+
+# Route to delete microservice object:
+@microservice_bp.route("/remove/<microservice>")
+def remove_microservice(microservice):
+    # TODO: Write deletion function after writing adding and editing function.
+    
+    # Querying to ensure that the microservice exists:
+    microservice = Microservice.query.filter_by(microservice_name=microservice).first()
+    
+    if microservice is not None:
+        # Deleting Miroservice:
+        msg_text = f"Microservice {microservice.microservice_name} successfully removed"
+        db.session.delete(microservice)
+        db.session.commit()
+
+        flash(msg_text)
+
+        return redirect("/")
+
+    else:
+        return redirect("/")
+
 
 # Route for Microservice creation:
 @microservice_bp.route("/add/", methods=["GET", "POST"])        
@@ -365,16 +431,29 @@ def microservice_creation_form():
     # Processing Form info and adding microservice to database:
     if form.validate_on_submit():
 
-        # Creating a Microservice Object:
-        new_microservice = Microservice(
-            microservice_name=form.microservice_name.data,
-            microservice_description=form.microservice_description.data,
-            date_added=datetime.datetime.now()
-        )
+        # TODO: Add logic that allows you to create OR update an existing object via this endpoint. 
+        # Querying the microservice object to see if it already exists:
+        existing_microservice = Microservice.query.filter_by(microservice_name=form.microservice_name.data).first()
 
-        # Committing a Microservice object to the database:
-        db.session.add(new_microservice)
-        db.session.commit()
+        if existing_microservice is not None:
+            # Updating an existing microservice fields:
+            existing_microservice.microservice_description = form.microservice_description.data
+            existing_microservice.date_added=datetime.datetime.now()
+
+            # Adding updated object to the database:
+            db.session.commit()
+
+        else:
+            # Creating a Microservice Object:
+            new_microservice = Microservice(
+                microservice_name=form.microservice_name.data,
+                microservice_description=form.microservice_description.data,
+                date_added=datetime.datetime.now()
+            )
+
+            # Committing a Microservice object to the database:
+            db.session.add(new_microservice)
+            db.session.commit()
 
         return redirect("/microservices/")
 
@@ -388,7 +467,10 @@ def specific_microservice_dashboard(microservice):
     passes this data into the HTML template.
     """
 
-    levels = ["INFO", "WARNING", "ERROR", "CRITICAL"]
+    levels = ["INFO", "WARN", "ERR.", "CRITICAL"]
+
+    # Creating the previous week timeframe that is used to filter the microservice logs:
+    prev_week = datetime.datetime.today() - datetime.timedelta(days=7)
 
     # Querying the single microservice from the Database:
     microservice = Microservice.query.filter_by(microservice_name=microservice).first()
@@ -397,7 +479,10 @@ def specific_microservice_dashboard(microservice):
     if microservice is not None:
         
         # Querying the logs from a specific microservice: 
-        microservice_logs = MicroServiceLog.query.filter_by(app_name=microservice.microservice_name).all()
+        microservice_logs = MicroServiceLog.query.filter_by(
+            app_name=microservice.microservice_name).filter(MicroServiceLog.timestamp >= prev_week).order_by(
+                MicroServiceLog.timestamp.desc()).all()
+        
 
         # Converting the Microservice Logs to a dataframe:
         microservice_log_dicts = [
@@ -410,14 +495,14 @@ def specific_microservice_dashboard(microservice):
                 "status_code":microservice_log.status_code, 
                 "levelname":microservice_log.levelname,
                 "created":microservice_log.created,
-                "lineno":microservice_log,
-                "funcName":microservice_log, 
-                "msecs":microservice_log,
-                "relativeCreated":microservice_log,
-                "thread":microservice_log,
-                "threadName":microservice_log, 
-                "processName":microservice_log,
-                "process":microservice_log
+                "lineno":microservice_log.lineno,
+                "funcName":microservice_log.funcName, 
+                "msecs":microservice_log.msecs,
+                "relativeCreated":microservice_log.relativeCreated,
+                "thread":microservice_log.thread,
+                "threadName":microservice_log.threadName, 
+                "processName":microservice_log.processName,
+                "process":microservice_log.process
 
             } for microservice_log in microservice_logs
         ]
@@ -429,7 +514,46 @@ def specific_microservice_dashboard(microservice):
         microservice_df.set_index("timestamp" ,inplace=True)
 
         # Creating a figure for microservice log timeseries based on log severity level:
-        log_level_fig = go.Figure()
+        """
+        microservice_desc_lst = microservice.microservice_description.split(" ")
+        # Splitting microservice description to make it formattable:
+        if len(microservice_desc_lst) > 9:
+
+            # Inserting line breaks:
+            microservice_desc_lst.insert(10, "<br>")
+
+            # Re-converting the list of strigs to a single string and adding it back to the microservice objects:
+            microservice.microservice_description = " ".join(microservice_desc_lst)
+        """
+
+        log_level_fig = go.Figure(
+            layout=go.Layout(
+                title=dict(
+                    text=microservice.microservice_description,
+                    y=0.9,
+                    x=0.5,
+                    xanchor="center",
+                    yanchor="top"
+                ),
+                plot_bgcolor= "rgba(0,0,0,0)",
+                paper_bgcolor= "rgba(0,0,0,0)",
+                font=dict(color="#b2becd"),
+                xaxis=dict(
+                    title="Local Time",
+                    gridcolor="#b2becd",
+                    linecolor="#b2becd",
+                    linewidth= 1,
+                    mirror= True, 
+                    showgrid=False),
+                yaxis=dict(
+                    title="Log Frequency",
+                    gridcolor= "#b2becd",
+                    linecolor= "#b2becd",
+                    linewidth= 2,
+                    mirror= True,
+                    showgrid= False)
+            )
+        )
 
         # Iterating through the logging levels and adding plots to the figure:
         for level in levels:

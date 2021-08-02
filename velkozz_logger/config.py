@@ -26,4 +26,4 @@ class ProdConfig(Config):
     FLASK_ENV = 'production'
     DEBUG = False
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = environ.get('PROD_DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = f"psql://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}@velkozz_logger_psql:{os.environ['POSTGRES_PORT']}/{os.environ['POSTGRES_DB']}"

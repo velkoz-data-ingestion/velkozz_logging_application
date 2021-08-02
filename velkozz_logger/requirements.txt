@@ -1,0 +1,7 @@
+Flask
+pandas
+networkx
+flask-restful
+plotly
+Flask-WTF
+WTForms

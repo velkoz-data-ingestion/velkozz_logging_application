@@ -3,5 +3,40 @@
   border-radius: 6px;
   border: 1px solid;
   border-color: var(--btn-grey-border);   
-  margin: 5px;
+  padding: 5px;
+  margin: 10px;
+  height: 20px;
+  text-align: justify;
+}
+
+.log-table thead tr {
+  color: #ffffff;
+  text-align: left;
+}
+
+.log-table th,
+.log-table td {
+    padding: 12px 15px;
+}
+
+.log-table tbody tr {
+  border-bottom: 1px solid #dddddd;
+}
+
+.log-table tbody tr:last-of-type {
+  border-bottom: 2px solid #b2becd;
+}
+
+.log-table{
+  width: 100%;
+  border-collapse: collapse;
+  margin: 25px 0;
+  font-size: 0.9em;
+  font-family: sans-serif;
+  min-width: 400px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.title-center{
+  text-align: center;
 }

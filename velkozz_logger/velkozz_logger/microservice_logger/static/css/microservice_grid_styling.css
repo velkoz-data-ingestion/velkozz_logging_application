@@ -14,7 +14,7 @@
 
 .microservice_grid{
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(1, 1fr);
     grid-template-rows: repeat(1, 1fr);
     gap: 0.5rem;
 }
@@ -24,5 +24,32 @@
     border: 1px solid;
     border-color: var(--btn-grey-border);
     padding: 5px;
+}
 
+.invisible_link{
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+}
+
+.add_button {
+    text-align: right;
+}
+
+.add_button a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.delete_link{
+    text-align: right;
+    text-decoration: none;
+    padding-right: 5px;
+    margin-top: 5px;
+    color: inherit;
+}
+
+.delete_link a {
+    text-decoration: none;
+    color: inherit;
 }

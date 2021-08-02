@@ -1,0 +1,31 @@
+version: '3.9'
+services:
+  flask-logger:
+    build: .
+    depends_on:
+      - velkozz_logger_psql
+    container_name: velkozz_logger
+    networks:
+      - velkozz-api-network
+    env_file: 
+      - .logger.env
+    ports: 
+      - "5000:5000"
+
+  velkozz_logger_psql:
+    image: postgres
+    container_name: velkozz_logger_psql
+    restart: always
+    networks:
+      - velkozz-api-network
+    env_file: 
+      - .logger.env
+    ports: 
+      - "5430:5430"
+    volumes: 
+       # Persist the data between container invocations
+       - ~/velkozz_db/logger_psql:/var/lib/postgresql/data
+
+networks:
+  velkozz_web_api_velkozz-api-network:
+    external: true
