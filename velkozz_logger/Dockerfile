@@ -11,6 +11,6 @@ WORKDIR /home/logger/
 # Running all of the python install components:
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "manage.py", "wsgi.py"]
+CMD ["python", "wsgi.py"]
 
 EXPOSE 5000
