@@ -5,3 +5,5 @@ flask-restful
 plotly
 Flask-WTF
 WTForms
+Flask-SQLAlchemy
+python-dotenv

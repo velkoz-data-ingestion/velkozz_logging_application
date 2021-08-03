@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 # Loading External Environment Configuration File: 
 basedir = path.abspath(path.dirname(__file__))
-load_dotenv(path.join(basedir, '.env'))
+load_dotenv(path.join(basedir, '.logger.env'))
 
 class Config:
     "Base Configuration"
@@ -26,4 +26,5 @@ class ProdConfig(Config):
     FLASK_ENV = 'production'
     DEBUG = False
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = f"psql://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}@velkozz_logger_psql:{os.environ['POSTGRES_PORT']}/{os.environ['POSTGRES_DB']}"
+    SQLALCHEMY_DATABASE_URI = f"postgresql://{environ['POSTGRES_USER']}:{environ['POSTGRES_PASSWORD']}@velkozz_logger_psql:{environ['POSTGRES_PORT']}/{environ['POSTGRES_DB']}"
+    SQLALCHEMY_TRACK_MODIFICATIONS=False
