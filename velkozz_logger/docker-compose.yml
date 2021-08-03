@@ -28,3 +28,5 @@ services:
 
 networks:
   velkozz_web_api_velkozz-api-network:
+    external: true
+
