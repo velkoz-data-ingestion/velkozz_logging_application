@@ -260,6 +260,10 @@ def microservice_log_home():
     # Creating the previous week timeframe that is used to filter the microservice logs:
     prev_week = datetime.datetime.today() - datetime.timedelta(days=7)
     microservice_logs = MicroServiceLog.query.filter(MicroServiceLog.timestamp >= prev_week).all()
+    
+    # Logic that checks the number of microservice_logs. If < 0 render template w/o applying logic:
+    if len(microservice_logs) <= 0:
+        return render_template("microservice_home.html", microservices=microservices, graphJSON=graphJSON)
 
     # Converting the microservice query object to a list of dictionary:
     microservice_log_dicts = [
@@ -483,6 +487,9 @@ def specific_microservice_dashboard(microservice):
             app_name=microservice.microservice_name).filter(MicroServiceLog.timestamp >= prev_week).order_by(
                 MicroServiceLog.timestamp.desc()).all()
         
+        # Logic rendering template w/o graphs and other dispaly if there are no logs:
+        if len(microservice_logs) <= 0:
+            return render_template("microservice_dashboard.html",  microservice=microservice, microservice_logs=microservice_logs)
 
         # Converting the Microservice Logs to a dataframe:
         microservice_log_dicts = [
