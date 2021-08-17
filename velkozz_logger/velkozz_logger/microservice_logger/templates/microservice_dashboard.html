@@ -2,7 +2,6 @@
 
 {% block css %}
     <link rel="stylesheet" href="{{url_for('microservice_bp.static', filename='/css/microservice_dashboard.css')}}">
-    <link rel="stylesheet" href="{{url_for('microservice_bp.static', filename='js/microservice_dashboard.js')}}">
 {% endblock css %}
 
 {% block body %}
@@ -15,36 +14,43 @@
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Level</th>
-                    <th>Message</th>
+                    <th>INFO</th>
+                    <th>WARNING</th>
+                    <th>ERROR</th>
+                    <th>CRITICAL</th>
                 </tr>
             </thead>
             
             <tbody>
-            {% for microservice_log in microservice_logs %}
-                {% if microservice_log.levelname == "ERR." %}
-                    <tr>
-                        <td style="color: red;">{{microservice_log.timestamp}}</td>
-                        <td style="color: red;">{{microservice_log.levelname}}</td>
-                        <td style="color: red;">{{microservice_log.msg}}</td>
-                    </tr>
-                
-                {% elif microservice_log.levelname == "WARN" %}
-                    <tr>
-                        <td style="color: orange;">{{microservice_log.timestamp}}</td>
-                        <td style="color: orange;">{{microservice_log.levelname}}</td>
-                        <td style="color: orange;">{{microservice_log.msg}}</td>
-                    </tr>
+                {% for day in microservice_daily_summary %}
+                <tr>
+                    <td><a class="invisible_link" href="{{ url_for('microservice_bp.daily_microservice_logs', microservice=microservice.microservice_name, date=day.Date) }}">{{day.Date}}</a></td>
 
-                {% else %}
-                    <tr>
-                        <td>{{microservice_log.timestamp}}</td>
-                        <td>{{microservice_log.levelname}}</td>
-                        <td>{{microservice_log.msg}}</td>
-                    </tr>
-                {% endif %}
+                    {% if day.INFO == 0 %}
+                        <td>{{day.INFO}}</td>
+                    {% else %}
+                        <td style="color: greenyellow;">{{day.INFO}}</td>
+                    {% endif %}
+                    
+                    {% if day.WARNING == 0 %}
+                        <td>{{day.WARNING}}</td>
+                    {% else %}
+                        <td style="color: orange;">{{day.WARNING}}</td>
+                    {% endif %}
 
-            {% endfor %}
+                    {% if day.ERROR == 0 %}
+                        <td>{{day.ERROR}}</td>
+                    {% else %}
+                    <td style="color: red;">{{day.ERROR}}</td>
+                    {% endif %}
+
+                    {% if day.CRITICAL == 0 %}
+                        <td>{{day.CRITICAL}}</td>
+                    {% else %}
+                        <td style="color: purple;">{{day.CRITICAL}}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>

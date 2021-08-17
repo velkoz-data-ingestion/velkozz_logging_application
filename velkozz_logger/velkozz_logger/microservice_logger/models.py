@@ -34,14 +34,6 @@ class MicroServiceLog(db.Model):
         nullable=True
     )
     
-    timestamp = db.Column(
-        db.TIMESTAMP,
-        primary_key=True,
-        index=True,
-        unique=False,
-        nullable=True
-    )
-
     status_code = db.Column(
         db.Integer,
         index=False,
@@ -58,7 +50,8 @@ class MicroServiceLog(db.Model):
 
     created = db.Column(
         db.TIMESTAMP,
-        index=False,
+        primary_key=True,
+        index=True,
         unique=False,
         nullable=True
     )

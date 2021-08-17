@@ -62,13 +62,12 @@ class MicroServiceLogs(Resource):
         logs = MicroServiceLog.query.all()
 
         # Unpacking the SQLAlchemy objects into seralized JSON:
-        reddit_logs = [
+        logs = [
             {
                 "name":log.name,
                 "msg": log.msg,
                 "app_name":log.app_name,
                 "process_type":log.process_type,
-                "timestamp":log.timestamp.strftime("%m/%d/%Y, %H:%M:%S"),
                 "status_code": log.status_code,
                 "levelname":log.levelname,
                 "created":log.created.strftime("%m/%d/%Y, %H:%M:%S"),
@@ -84,7 +83,7 @@ class MicroServiceLogs(Resource):
              for log in logs
              ]
         
-        return reddit_logs
+        return logs
     
     def post(self):
         """Handeling POST requests made to the server containing logs.
@@ -105,10 +104,9 @@ class MicroServiceLogs(Resource):
             } <= set(args):
 
             # Converting the string tuple to actual tuple and unpacking:
-            app_name, process_type, timestamp, status_code = ast.literal_eval(args["args"])
+            app_name, process_type, status_code = ast.literal_eval(args["args"])
 
             # Converting the arguments to the correct data types:
-            timestamp_obj = datetime.datetime.strptime(timestamp, "%d-%b-%Y (%H:%M:%S.%f)")
             status_code = int(status_code)
             created_obj = datetime.datetime.fromtimestamp(float(args["created"]))
             lineno = int(args["lineno"])
@@ -122,7 +120,6 @@ class MicroServiceLogs(Resource):
                 msg = args["msg"],
                 app_name = app_name,
                 process_type = process_type,
-                timestamp = timestamp_obj,
                 status_code = status_code,
                 levelname = args["levelname"],
                 created = created_obj,
@@ -140,7 +137,7 @@ class MicroServiceLogs(Resource):
             db.session.add(new_log)
             db.session.commit() 
             
-            return make_response(f"Log {app_name}{process_type}{timestamp_obj} Successfully")
+            return make_response(f"Log {app_name}{process_type}{created_obj} Successfully")
 
         else:
             raise Warning("Log not Written to the database. Placeholder for error catching.")
@@ -259,7 +256,7 @@ def microservice_log_home():
 
     # Creating the previous week timeframe that is used to filter the microservice logs:
     prev_week = datetime.datetime.today() - datetime.timedelta(days=7)
-    microservice_logs = MicroServiceLog.query.filter(MicroServiceLog.timestamp >= prev_week).all()
+    microservice_logs = MicroServiceLog.query.filter(MicroServiceLog.created >= prev_week).all()
     
     # Logic that checks the number of microservice_logs. If < 0 render template w/o applying logic:
     if len(microservice_logs) <= 0:
@@ -272,18 +269,17 @@ def microservice_log_home():
             "msg":microservice_log.msg, 
             "app_name":microservice_log.app_name,
             "process_type":microservice_log.process_type,
-            "timestamp":microservice_log.timestamp,
             "status_code":microservice_log.status_code, 
             "levelname":microservice_log.levelname,
             "created":microservice_log.created,
-            "lineno":microservice_log,
-            "funcName":microservice_log, 
-            "msecs":microservice_log,
-            "relativeCreated":microservice_log,
-            "thread":microservice_log,
-            "threadName":microservice_log, 
-            "processName":microservice_log,
-            "process":microservice_log
+            "lineno":microservice_log.lineno,
+            "funcName":microservice_log.funcName, 
+            "msecs":microservice_log.msecs,
+            "relativeCreated":microservice_log.relativeCreated,
+            "thread":microservice_log.thread,
+            "threadName":microservice_log.threadName, 
+            "processName":microservice_log.processName,
+            "process":microservice_log.process
 
         } for microservice_log in microservice_logs
     ]
@@ -299,7 +295,7 @@ def microservice_log_home():
         df_slice = microservice_df.loc[microservice_df["app_name"] == microservice.microservice_name]
 
         # Transforming data to create daily frequency counts:
-        df_slice.set_index("timestamp" ,inplace=True)
+        df_slice.set_index("created" ,inplace=True)
         
         def add_microservice_log_data(microservice_slice_dict, microservice_name, microservice_df):
             """Method tries to extract the number of daily occurances of the specific 
@@ -309,7 +305,7 @@ def microservice_log_home():
             'microservice_slices' dict.
             """
             # List of log level to process:
-            levels = ["INFO", "WARN", "ERR.", "CRITICAL"]
+            levels = ["INFO", "WARN", "ERR.", "CRITICAL", "WARNING", "ERROR"]
 
             # Iterating through the dataframe slicing and resampling data to get counts of logs:
             level_data_dict = {}
@@ -336,7 +332,7 @@ def microservice_log_home():
 
     # TODO: use Microservice Slice Dict to create plotly timesereis and pass them to the front-end.
     # Iterating through the microservice dict to create a plotly timeseries for each microservice:
-    levels = ["INFO", "WARN", "ERR.", "CRITICAL"]
+    levels = ["INFO", "WARN", "ERR.", "CRITICAL", "WARNING", "ERROR"]
     log_scatterplots = {}
     for microservice in microservice_slices:   
 
@@ -471,7 +467,7 @@ def specific_microservice_dashboard(microservice):
     passes this data into the HTML template.
     """
 
-    levels = ["INFO", "WARN", "ERR.", "CRITICAL"]
+    levels = ["INFO", "WARN", "ERR.", "CRITICAL", "WARNING", "ERROR"]
 
     # Creating the previous week timeframe that is used to filter the microservice logs:
     prev_week = datetime.datetime.today() - datetime.timedelta(days=7)
@@ -484,8 +480,8 @@ def specific_microservice_dashboard(microservice):
         
         # Querying the logs from a specific microservice: 
         microservice_logs = MicroServiceLog.query.filter_by(
-            app_name=microservice.microservice_name).filter(MicroServiceLog.timestamp >= prev_week).order_by(
-                MicroServiceLog.timestamp.desc()).all()
+            app_name=microservice.microservice_name).filter(MicroServiceLog.created >= prev_week).order_by(
+                MicroServiceLog.created.desc()).all()
         
         # Logic rendering template w/o graphs and other dispaly if there are no logs:
         if len(microservice_logs) <= 0:
@@ -498,7 +494,6 @@ def specific_microservice_dashboard(microservice):
                 "msg":microservice_log.msg, 
                 "app_name":microservice_log.app_name,
                 "process_type":microservice_log.process_type,
-                "timestamp":microservice_log.timestamp,
                 "status_code":microservice_log.status_code, 
                 "levelname":microservice_log.levelname,
                 "created":microservice_log.created,
@@ -518,7 +513,7 @@ def specific_microservice_dashboard(microservice):
         microservice_df = pd.DataFrame.from_dict(microservice_log_dicts)
         
         microservice_df["_counter"] = 1
-        microservice_df.set_index("timestamp" ,inplace=True)
+        microservice_df.set_index("created" ,inplace=True)
 
         # Creating a figure for microservice log timeseries based on log severity level:
         """
@@ -563,8 +558,13 @@ def specific_microservice_dashboard(microservice):
         )
 
         # Iterating through the logging levels and adding plots to the figure:
+        daily_level_count_df = pd.DataFrame()
         for level in levels:
             level_frequency = microservice_df.loc[microservice_df["levelname"] == level, "_counter"].squeeze().resample("D").sum()
+            
+            # Building dataframe of daily counts:
+            daily_level_count_df[level] = level_frequency
+
             try:
                 log_level_fig.add_trace(go.Scatter(
                     name=f"{level}",
@@ -572,15 +572,135 @@ def specific_microservice_dashboard(microservice):
                     x=level_frequency.index,
                     y=list(level_frequency.values)
                 ))
-                pass
+
             except:
                 pass
+
+        # Formatting the dataframe of daily log summary:
+        # Value Aggregation between ERR. and ERROR etc:
+        daily_level_count_df.fillna(0, inplace=True)
+        daily_level_count_df["WARNING"] = daily_level_count_df["WARNING"] + daily_level_count_df["WARN"]
+        daily_level_count_df["ERROR"] = daily_level_count_df["ERROR"] + daily_level_count_df["ERR."]
+        daily_level_count_df.drop("ERR.", axis=1, inplace=True)
+        daily_level_count_df.drop("WARN", axis=1, inplace=True)
+
+        # Creating independent datetime column so index can be replaced:
+        daily_level_count_df["Date"] = daily_level_count_df.index
+        daily_level_count_df["Date"] = daily_level_count_df["Date"].apply(lambda x: x.strftime("%d-%m-%Y"))
+        daily_level_count_df.sort_index(inplace=True, ascending=False)
+        daily_level_count_df.reset_index(inplace=True)
         
+        daily_level_count_json = daily_level_count_df.to_dict(orient="records")
+
         # Converting the timeseries figure to json and attaching it to the main microservice object:
         log_freq_timeseries = json.dumps(log_level_fig, cls=plotly.utils.PlotlyJSONEncoder)
         microservice.log_freq_timeseries = log_freq_timeseries
-
+        
     else:
         pass
+
+    return render_template("microservice_dashboard.html",  microservice=microservice, microservice_daily_summary=daily_level_count_json)
+
+@microservice_bp.route("/dashboard/<microservice>/<date>/", methods=["GET"])
+def daily_microservice_logs(microservice, date):
+    """
+    The method that extracts and renders specific log data for a microservice
+    for a single day. 
+
+    Whereas specific_microservice_dashboard() renders a summary of all logs made broken
+    down by day, this method displays every single log made for that microservice for that day.
+    """    
+    # Converting date string to datetime objects, getting the first and last timestamp of a day:
+    # Combining min/max times w/ datetime to create date range query:
+    day = datetime.datetime.strptime(date, "%d-%m-%Y")
+    min_timestamp = datetime.datetime.combine(day, datetime.time.min)
+    max_timestamp = datetime.datetime.combine(day, datetime.time.max)
+
+    # Querying all microserivce logs for the date specified:    
+    microservice_logs = MicroServiceLog.query.filter_by(
+        app_name=microservice).filter(
+            MicroServiceLog.created >= min_timestamp).filter(
+            MicroServiceLog.created <= max_timestamp).order_by(
+            MicroServiceLog.created.desc()).all()
+
+    # Creating a dataframe from the microservice_logs every hour (TODO: Re-factor timescale?):
     
-    return render_template("microservice_dashboard.html",  microservice=microservice, microservice_logs=microservice_logs)
+    # Converting the Microservice Logs to a dataframe:
+    microservice_log_dicts = [
+
+        {
+            "name":microservice_log.name,
+            "msg":microservice_log.msg, 
+            "app_name":microservice_log.app_name,
+            "process_type":microservice_log.process_type,
+            "status_code":microservice_log.status_code, 
+            "levelname":microservice_log.levelname,
+            "created":microservice_log.created,
+            "lineno":microservice_log.lineno,
+            "funcName":microservice_log.funcName, 
+            "msecs":microservice_log.msecs,
+            "relativeCreated":microservice_log.relativeCreated,
+            "thread":microservice_log.thread,
+            "threadName":microservice_log.threadName, 
+            "processName":microservice_log.processName,
+            "process":microservice_log.process
+
+        } for microservice_log in microservice_logs
+    ]
+
+    # Creating and refactoring the dataframe into a dialy count of log frequency:
+    microservice_df = pd.DataFrame.from_dict(microservice_log_dicts)
+        
+    microservice_df["_counter"] = 1
+    microservice_df.set_index("created" ,inplace=True)
+
+    # Empty Plotly Figure:
+    log_level_fig = go.Figure(
+        layout=go.Layout(
+            title=dict(
+                text=f"Hourly Timeseries of logs made to {microservice} Microservice on {date}",
+                y=0.9,
+                x=0.5,
+                xanchor="center",
+                yanchor="top"
+            ),
+            plot_bgcolor= "rgba(0,0,0,0)",
+            paper_bgcolor= "rgba(0,0,0,0)",
+            font=dict(color="#b2becd"),
+            xaxis=dict(
+                title="Local Time",
+                gridcolor="#b2becd",
+                linecolor="#b2becd",
+                linewidth= 1,
+                mirror= True, 
+                showgrid=False),
+            yaxis=dict(
+                title="Log Frequency",
+                gridcolor= "#b2becd",
+                linecolor= "#b2becd",
+                linewidth= 2,
+                mirror= True,
+                showgrid= False)
+        )
+    )
+
+    # Extracting hourly counts of logs and plotting scatterplot:
+    for level in ["INFO", "WARN", "ERR.", "CRITICAL", "WARNING", "ERROR"]:
+        level_frequency = microservice_df.loc[microservice_df["levelname"] == level, "_counter"].squeeze().resample("H").sum()     
+
+        try:
+            log_level_fig.add_trace(go.Scatter(
+                name=f"{level}",
+                mode="markers+lines",
+                x=level_frequency.index,
+                y=list(level_frequency.values)
+            ))
+
+        except:
+            pass
+
+        # Converting the timeseries figure to json and attaching it to the main microservice object:
+        log_freq_timeseries = json.dumps(log_level_fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+
+    return render_template("daily_microservice_dashboard.html", microservice=microservice, date=date, microservice_timeseries=log_freq_timeseries,  microservice_logs=microservice_logs)

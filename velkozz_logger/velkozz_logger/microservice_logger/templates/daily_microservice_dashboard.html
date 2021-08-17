@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block css %}
+    <link rel="stylesheet" href="{{url_for('microservice_bp.static', filename='css/daily_microservice_dashboard.css')}}">
+{% endblock css %}
+
+{% block body %}
+<h1 class="title-center">{{microservice}} Microservice</h1>
+<div class="log_freq_timeseries" id="log_freq_timeseries"></div>
+<div class="log_count_timeseries" id="log_count_timeseries"></div>
+<div class="specific_log_table">
+    
+    <table class="log-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Log Type</th>
+                <th>Origin</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+        {% for microservice_log in microservice_logs %}
+            <tr>
+                <td>{{microservice_log.created}}</td>            
+                {% if microservice_log.levelname == "ERR." or microservice_log.levelname == "ERROR" %}
+                    <td style="color: red;">{{microservice_log.levelname}} {{microservice_log.status_code}}</td>   
+                
+                {% elif microservice_log.levelname == "WARN" or microservice_log.levelname == "WARNING" %}
+                    <td style="color: orange;">{{microservice_log.levelname}} {{microservice_log.status_code}}</td>
+                {% else %}
+                    <td>{{microservice_log.levelname}} {{microservice_log.status_code}}</td>
+                {% endif %}
+
+            <td>{{microservice_log.funcName}}() line: {{microservice_log.lineno}}</td>
+            <td>{{microservice_log.msg}}</td>
+        </tr>
+
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock body %}
+
+{% block javascript %}
+<script>
+    var log_freq_graph = {{microservice_timeseries | safe}};
+    Plotly.plot("log_freq_timeseries", log_freq_graph, {});
+</script>
+{% endblock javascript %}

@@ -9,13 +9,25 @@
   text-align: justify;
 }
 
+.invisible_link{
+  text-decoration: none;
+  color: inherit;
+  text-align: center;
+}
+
 .log-table thead tr {
   color: #ffffff;
-  text-align: left;
+  text-align: center;
+  border-color: #dddddd;
+}
+.log-table th {
+  border: 2px solid;
+  border-color: #dddddd;
 }
 
 .log-table th,
 .log-table td {
+    text-align: center;
     padding: 12px 15px;
 }
 

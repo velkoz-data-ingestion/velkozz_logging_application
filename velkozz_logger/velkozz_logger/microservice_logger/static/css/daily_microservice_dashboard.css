@@ -1,0 +1,37 @@
+.log-table thead tr {
+    color: #ffffff;
+    text-align: center;
+    border-color: #dddddd;
+  }
+  .log-table th {
+    border: 2px solid;
+    border-color: #dddddd;
+  }
+  
+  .log-table th,
+  .log-table td {
+      text-align: center;
+      padding: 12px 15px;
+  }
+  
+  .log-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+  }
+  
+  .log-table tbody tr:last-of-type {
+    border-bottom: 2px solid #b2becd;
+  }
+  
+  .log-table{
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.8em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  .title-center{
+    text-align: center;
+  }
